@@ -989,7 +989,11 @@ function toggleFaq(btn) {
 // ═══════════════════════════════════════════
 let reservations = JSON.parse(localStorage.getItem('haos_res') || '[]');
 
-function submitReservation() {
+// ⚠️ 重要：請將下面的 KEY 換成您從 Web3Forms 申請的 Access Key
+// 申請網址：https://web3forms.com（免費，不用註冊帳號）
+const WEB3FORMS_KEY = '08824281-f2e0-49d8-ae93-d61c8879e74b';
+
+async function submitReservation() {
   const name = document.getElementById('resName').value.trim();
   const phone = document.getElementById('resPhone').value.trim();
   const date = document.getElementById('resDate').value;
@@ -1000,10 +1004,63 @@ function submitReservation() {
     alert('請填寫所有必填欄位');
     return;
   }
-  reservations.push({ id: Date.now(), name, phone, date, time, people, note, status: 'pending', createdAt: new Date().toLocaleString('zh-TW') });
-  localStorage.setItem('haos_res', JSON.stringify(reservations));
-  document.getElementById('resFormContent').style.display = 'none';
-  document.getElementById('resSuccess').style.display = 'block';
+
+  const submitBtn = document.querySelector('.form-submit');
+  const originalText = submitBtn.textContent;
+  submitBtn.disabled = true;
+  submitBtn.textContent = '送出中...';
+
+  const createdAt = new Date().toLocaleString('zh-TW', { timeZone: 'Asia/Taipei' });
+
+  // 組成漂亮的訂位通知 Email 內容
+  const emailMessage =
+    '🔔 饗義廚房 - 新訂位通知\n\n' +
+    '━━━━━━━━━━━━━━━━━━\n' +
+    '👤 姓名：' + name + '\n' +
+    '📞 電話：' + phone + '\n' +
+    '📅 日期：' + date + '\n' +
+    '🕐 時段：' + time + '\n' +
+    '👥 人數：' + people + ' 人\n' +
+    (note ? '📝 備註：' + note + '\n' : '') +
+    '━━━━━━━━━━━━━━━━━━\n' +
+    '⏰ 送出時間：' + createdAt + '\n\n' +
+    '請盡快回電確認訂位，謝謝！';
+
+  const formData = new FormData();
+  formData.append('access_key', WEB3FORMS_KEY);
+  formData.append('subject', '🔔 饗義廚房新訂位 - ' + name + ' / ' + date + ' ' + time);
+  formData.append('from_name', '饗義廚房訂位系統');
+  formData.append('message', emailMessage);
+  // 個別欄位（在 Email 中也會顯示）
+  formData.append('客人姓名', name);
+  formData.append('電話', phone);
+  formData.append('日期', date);
+  formData.append('時段', time);
+  formData.append('人數', people);
+  formData.append('備註', note || '無');
+  formData.append('送出時間', createdAt);
+
+  try {
+    if (WEB3FORMS_KEY && WEB3FORMS_KEY !== 'YOUR_WEB3FORMS_ACCESS_KEY_HERE') {
+      const response = await fetch('https://api.web3forms.com/submit', {
+        method: 'POST',
+        body: formData
+      });
+      const result = await response.json();
+      if (!result.success) throw new Error(result.message || 'Submit failed');
+    }
+
+    // 本機備份（萬一信沒收到至少還有紀錄）
+    reservations.push({ id: Date.now(), name, phone, date, time, people, note, status: 'pending', createdAt });
+    localStorage.setItem('haos_res', JSON.stringify(reservations));
+
+    document.getElementById('resFormContent').style.display = 'none';
+    document.getElementById('resSuccess').style.display = 'block';
+  } catch (err) {
+    alert('送出失敗，請直接電話訂位：06-209-5559');
+    submitBtn.disabled = false;
+    submitBtn.textContent = originalText;
+  }
 }
 
 function resetForm() {
