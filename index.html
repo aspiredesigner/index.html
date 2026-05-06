@@ -248,6 +248,26 @@ footer{background:#111927;color:rgba(255,255,255,.6);padding:60px 32px 32px}
   .float-btn{bottom:16px;right:16px;padding:12px 18px;font-size:13px}
   .menu-items{grid-template-columns:1fr}
 }
+
+/* ADMIN MODAL */
+.admin-modal{position:fixed;inset:0;background:rgba(10,15,28,0.85);backdrop-filter:blur(8px);z-index:9999;display:none;align-items:center;justify-content:center;padding:20px;animation:fadeInModal .25s}
+.admin-modal.open{display:flex}
+@keyframes fadeInModal{from{opacity:0}to{opacity:1}}
+.admin-modal-box{background:var(--navy);width:100%;max-width:1100px;max-height:92vh;overflow-y:auto;position:relative;border:1px solid rgba(255,255,255,.1);box-shadow:0 20px 60px rgba(0,0,0,.6);animation:slideUpModal .35s}
+@keyframes slideUpModal{from{transform:translateY(20px);opacity:0}to{transform:translateY(0);opacity:1}}
+.admin-modal-close{position:absolute;top:16px;right:16px;background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.2);color:#fff;width:36px;height:36px;border-radius:50%;cursor:pointer;font-size:18px;display:flex;align-items:center;justify-content:center;transition:all .2s;z-index:5}
+.admin-modal-close:hover{background:var(--coral);border-color:var(--coral)}
+.admin-modal-header{padding:32px 40px 24px;border-bottom:1px solid rgba(255,255,255,.08);text-align:center}
+.admin-modal-header .stag{display:inline-block;color:var(--gold);font-size:11px;letter-spacing:4px;font-family:'Playfair Display',serif;margin-bottom:8px}
+.admin-modal-header h2{color:#fff;font-size:24px;font-weight:700}
+.admin-modal-body{padding:32px 40px}
+@media(max-width:600px){
+  .admin-modal-box{max-height:100vh;height:100vh}
+  .admin-modal-header{padding:24px 20px 18px}
+  .admin-modal-body{padding:24px 20px}
+  .admin-modal-header h2{font-size:20px}
+}
+.admin-login-wrap{background:none;border:none;padding:0;max-width:360px;margin:0 auto}
 </style>
 </head>
 <body>
@@ -554,43 +574,7 @@ footer{background:#111927;color:rgba(255,255,255,.6);padding:60px 32px 32px}
   </div>
 </section>
 
-<!-- ADMIN (hidden) -->
-<section id="admin">
-  <div class="container">
-    <div class="section-header">
-      <div class="section-tag">BACK OFFICE</div>
-      <h2 class="section-title">後台管理</h2>
-      <div class="section-line" style="background:var(--gold)"></div>
-    </div>
-    <div id="adminLoginArea" style="max-width:400px;margin:0 auto">
-      <div class="admin-login-wrap">
-        <div style="text-align:center;margin-bottom:24px"><div style="font-size:32px;margin-bottom:8px">🔐</div><div style="color:rgba(255,255,255,.5);font-size:13px">請輸入管理員密碼</div></div>
-        <label>密碼</label>
-        <input type="password" id="adminPass" placeholder="輸入密碼" onkeydown="if(event.key==='Enter')adminLogin()">
-        <button class="admin-login-btn" onclick="adminLogin()">登入後台</button>
-        <div id="loginError" style="color:#f44336;font-size:12px;text-align:center;margin-top:10px;display:none">密碼錯誤，請再試一次</div>
-      </div>
-    </div>
-    <div class="admin-panel" id="adminDashboard">
-      <div class="admin-stats" id="adminStats"></div>
-      <div class="admin-toolbar">
-        <div class="admin-toolbar-left">
-          <button class="admin-btn" onclick="filterRes('all')">全部</button>
-          <button class="admin-btn" onclick="filterRes('pending')">待確認</button>
-          <button class="admin-btn" onclick="filterRes('confirmed')">已確認</button>
-          <button class="admin-btn" onclick="filterRes('cancelled')">已取消</button>
-        </div>
-        <button class="admin-btn success" onclick="exportCSV()">📥 匯出 CSV</button>
-      </div>
-      <div style="overflow-x:auto">
-        <table class="admin-table">
-          <thead><tr><th>#</th><th>姓名</th><th>電話</th><th>日期</th><th>時段</th><th>人數</th><th>備註</th><th>狀態</th><th>操作</th></tr></thead>
-          <tbody id="adminTableBody"></tbody>
-        </table>
-      </div>
-    </div>
-  </div>
-</section>
+<!-- ADMIN MODAL is below in body -->
 
 <!-- FAQ -->
 <section id="faq">
@@ -681,6 +665,9 @@ footer{background:#111927;color:rgba(255,255,255,.6);padding:60px 32px 32px}
         <li><a href="#" style="color:var(--coral)" data-i18n="footer_closed">週一公休</a></li>
       </ul>
     </div>
+  </div>
+  <div class="footer-admin-row">
+    <button class="footer-admin-btn" onclick="openAdminModal()" data-i18n="footer_admin">後台管理</button>
   </div>
   <div class="footer-bottom">
     <div>© 2025 饗義廚房 HAO's PASTA ｜ <span data-i18n="trans_addr">臺南市北區仁愛里長榮路四段13號</span></div>
@@ -1029,20 +1016,21 @@ function resetForm() {
 // ═══════════════════════════════════════════
 // ADMIN
 // ═══════════════════════════════════════════
-function revealAdmin() {
-  const sec = document.getElementById('admin');
-  sec.style.display = 'block';
-  setTimeout(() => sec.scrollIntoView({ behavior: 'smooth' }), 50);
+function openAdminModal() {
+  document.getElementById('adminModal').classList.add('open');
+  document.body.style.overflow = 'hidden';
+  setTimeout(() => document.getElementById('adminPass').focus(), 100);
 }
 
-// Auto-show admin if URL hash is #admin
-function checkAdminHash() {
-  if (window.location.hash === '#admin') {
-    revealAdmin();
-  }
+function closeAdminModal() {
+  document.getElementById('adminModal').classList.remove('open');
+  document.body.style.overflow = '';
+  // reset to login state when closing
+  document.getElementById('adminLoginArea').style.display = 'block';
+  document.getElementById('adminDashboard').classList.remove('visible');
+  document.getElementById('adminPass').value = '';
+  document.getElementById('loginError').style.display = 'none';
 }
-window.addEventListener('load', checkAdminHash);
-window.addEventListener('hashchange', checkAdminHash);
 
 function adminLogin() {
   if (document.getElementById('adminPass').value === 'haos2024') {
@@ -1096,6 +1084,57 @@ function exportCSV() {
 
 // init
 document.getElementById('resDate').min = new Date().toISOString().split('T')[0];
+
+// ESC key closes admin modal
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape' && document.getElementById('adminModal').classList.contains('open')) {
+    closeAdminModal();
+  }
+});
 </script>
+
+<!-- ADMIN MODAL -->
+<div class="admin-modal" id="adminModal" onclick="if(event.target===this)closeAdminModal()">
+  <div class="admin-modal-box">
+    <button class="admin-modal-close" onclick="closeAdminModal()" aria-label="關閉">✕</button>
+    <div class="admin-modal-header">
+      <div class="stag">BACK OFFICE</div>
+      <h2>後台管理</h2>
+    </div>
+    <div class="admin-modal-body">
+      <div id="adminLoginArea">
+        <div class="admin-login-wrap">
+          <div style="text-align:center;margin-bottom:24px">
+            <div style="font-size:32px;margin-bottom:8px">🔐</div>
+            <div style="color:rgba(255,255,255,.5);font-size:13px">請輸入管理員密碼</div>
+          </div>
+          <label>密碼</label>
+          <input type="password" id="adminPass" placeholder="輸入密碼" onkeydown="if(event.key===\'Enter\')adminLogin()">
+          <button class="admin-login-btn" onclick="adminLogin()">登入後台</button>
+          <div id="loginError" style="color:#f44336;font-size:12px;text-align:center;margin-top:10px;display:none">密碼錯誤，請再試一次</div>
+        </div>
+      </div>
+      <div class="admin-panel" id="adminDashboard">
+        <div class="admin-stats" id="adminStats"></div>
+        <div class="admin-toolbar">
+          <div class="admin-toolbar-left">
+            <button class="admin-btn" onclick="filterRes(\'all\')">全部</button>
+            <button class="admin-btn" onclick="filterRes(\'pending\')">待確認</button>
+            <button class="admin-btn" onclick="filterRes(\'confirmed\')">已確認</button>
+            <button class="admin-btn" onclick="filterRes(\'cancelled\')">已取消</button>
+          </div>
+          <button class="admin-btn success" onclick="exportCSV()">📥 匯出 CSV</button>
+        </div>
+        <div style="overflow-x:auto">
+          <table class="admin-table">
+            <thead><tr><th>#</th><th>姓名</th><th>電話</th><th>日期</th><th>時段</th><th>人數</th><th>備註</th><th>狀態</th><th>操作</th></tr></thead>
+            <tbody id="adminTableBody"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
 </body>
 </html>
