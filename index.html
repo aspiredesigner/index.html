@@ -967,7 +967,7 @@ function toggleFaq(btn) {
 // ═══════════════════════════════════════════
 // ⚠️ 重要：請將下面的 KEY 換成您從 Web3Forms 申請的 Access Key
 // 申請網址：https://web3forms.com（免費，不用註冊帳號）
-const WEB3FORMS_KEY = '08824281-f2e0-49d8-ae93-d61c8879e74b';
+const WEB3FORMS_KEY = 'YOUR_WEB3FORMS_ACCESS_KEY_HERE';
 
 async function submitReservation() {
   const name = document.getElementById('resName').value.trim();
@@ -1032,6 +1032,14 @@ function resetForm() {
   ['resDate','resTime','resPeople'].forEach(id => document.getElementById(id).value = '');
   document.getElementById('resFormContent').style.display = 'block';
   document.getElementById('resSuccess').style.display = 'none';
+  // 重置送出按鈕狀態
+  const btn = document.querySelector('.form-submit');
+  if (btn) {
+    btn.disabled = false;
+    const lang = document.querySelector('.lang-bar button.active')?.textContent || '中文';
+    const labels = {'中文':'確認送出訂位','EN':'Submit Reservation','日本語':'予約を送信','한국어':'예약 제출'};
+    btn.textContent = labels[lang] || '確認送出訂位';
+  }
 }
 
 // init
