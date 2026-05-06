@@ -1028,17 +1028,17 @@ async function submitReservation() {
 
   const formData = new FormData();
   formData.append('access_key', WEB3FORMS_KEY);
-  formData.append('subject', '🔔 饗義廚房新訂位 - ' + name + ' / ' + date + ' ' + time);
-  formData.append('from_name', '饗義廚房訂位系統');
+  formData.append('subject', '[饗義廚房] 新訂位 - ' + name + ' / ' + date + ' ' + time);
+  formData.append('from_name', 'Haos Pasta Reservation');
   formData.append('message', emailMessage);
-  // 個別欄位（在 Email 中也會顯示）
-  formData.append('客人姓名', name);
-  formData.append('電話', phone);
-  formData.append('日期', date);
-  formData.append('時段', time);
-  formData.append('人數', people);
-  formData.append('備註', note || '無');
-  formData.append('送出時間', createdAt);
+  // 用英文 key 避免 Email 欄位標題亂碼，內容仍是中文
+  formData.append('Name 姓名', name);
+  formData.append('Phone 電話', phone);
+  formData.append('Date 日期', date);
+  formData.append('Time 時段', time);
+  formData.append('Guests 人數', people + ' 人');
+  formData.append('Note 備註', note || '無');
+  formData.append('Submitted 送出時間', createdAt);
 
   try {
     if (WEB3FORMS_KEY && WEB3FORMS_KEY !== 'YOUR_WEB3FORMS_ACCESS_KEY_HERE') {
